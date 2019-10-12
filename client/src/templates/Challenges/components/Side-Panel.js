@@ -35,7 +35,21 @@ const propTypes = {
 };
 
 export class SidePanel extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      text: ''
+    };
+  }
   componentDidMount() {
+    window.WebViewBridge = {
+      onMessage: this._onMessage
+    };
+    const event = new Event('WebViewBridge');
+    window.dispatchEvent(event);
+    // alert('In React');
+    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'INIT' }));
+
     if (MathJax) {
       MathJax.Hub.Config({
         tex2jax: {
@@ -51,6 +65,15 @@ export class SidePanel extends Component {
       ]);
     }
   }
+
+  _onMessage = data => {
+    // Should log "helloFromRN" on load.
+    // alert('Received data');
+    this.setState({
+      text: data.text
+    });
+    console.log('Data from React native', data);
+  };
 
   render() {
     const {
@@ -71,7 +94,7 @@ export class SidePanel extends Component {
             {title}
           </ChallengeTitle>
           <ChallengeDescription
-            description={description}
+            description={this.state.text || description}
             instructions={instructions}
             section={section}
           />

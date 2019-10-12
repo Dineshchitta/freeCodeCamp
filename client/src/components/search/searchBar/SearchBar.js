@@ -53,6 +53,9 @@ class SearchBar extends Component {
   }
 
   componentDidMount() {
+    document.addEventListener('message', function(data) {
+      console.log('Got data from React native', data);
+    });
     const searchInput = document.querySelector('.ais-SearchBox-input');
     searchInput.id = 'fcc_instantsearch';
 

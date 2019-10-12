@@ -60,7 +60,7 @@ export function* executeChallengeSaga() {
       document
     );
     const testResults = yield executeTests(testRunner, tests);
-
+    window.ReactNativeWebView.postMessage(JSON.stringify(testResults));
     yield put(updateTests(testResults));
     yield put(updateConsole('// tests completed'));
     yield put(logsToConsole('// console output'));
