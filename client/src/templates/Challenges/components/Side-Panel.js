@@ -94,7 +94,7 @@ export class SidePanel extends Component {
             {title}
           </ChallengeTitle>
           <ChallengeDescription
-            description={this.state.text || description}
+            description={description}
             instructions={instructions}
             section={section}
           />
