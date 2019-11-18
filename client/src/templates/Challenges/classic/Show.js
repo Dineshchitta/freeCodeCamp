@@ -101,7 +101,9 @@ class ShowClassic extends Component {
     };
 
     this.state = {
-      resizing: false
+      resizing: false,
+      questionData: null,
+      setInitialCode: false
     };
 
     this.containerRef = React.createRef();
@@ -114,32 +116,49 @@ class ShowClassic extends Component {
     this.setState({ resizing: false });
   }
 
-  componentDidMount() {
-    const {
-      data: {
-        challengeNode: { title }
+  _onMessage = data => {
+    this.setState(
+      {
+        questionData: data.questionData
+      },
+      () => {
+        this.initializeComponent();
       }
-    } = this.props;
-    this.initializeComponent(title);
-  }
+    );
+  };
 
-  componentDidUpdate(prevProps) {
-    const {
-      data: {
-        challengeNode: { title: prevTitle }
-      }
-    } = prevProps;
-    const {
-      data: {
-        challengeNode: { title: currentTitle }
-      }
-    } = this.props;
-    if (prevTitle !== currentTitle) {
-      this.initializeComponent(currentTitle);
+  componentDidMount() {
+    window.WebViewBridge = {
+      onMessage: this._onMessage
+    };
+    const event = new Event('WebViewBridge');
+    window.dispatchEvent(event);
+    // alert('In React');
+
+    try {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'INIT' }));
+    } catch (error) {
+      console.log('React native webview error', error);
     }
   }
 
-  initializeComponent(title) {
+  // componentDidUpdate(prevProps) {
+  //   const {
+  //     data: {
+  //       challengeNode: { title: prevTitle }
+  //     }
+  //   } = prevProps;
+  //   const {
+  //     data: {
+  //       challengeNode: { title: currentTitle }
+  //     }
+  //   } = this.props;
+  //   if (prevTitle !== currentTitle) {
+  //     this.initializeComponent(currentTitle);
+  //   }
+  // }
+
+  initializeComponent() {
     const {
       challengeMounted,
       createFiles,
@@ -147,14 +166,14 @@ class ShowClassic extends Component {
       initTests,
       updateChallengeMeta,
       data: {
-        challengeNode: {
-          files,
-          fields: { tests },
-          challengeType
-        }
+        challengeNode: { files, challengeType }
       },
       pageContext: { challengeMeta }
     } = this.props;
+    const {
+      title,
+      fields: { tests }
+    } = this.state.questionData;
     initConsole('');
     createFiles(files);
     initTests(tests);
@@ -167,7 +186,7 @@ class ShowClassic extends Component {
     createFiles({});
   }
 
-  getChallenge = () => this.props.data.challengeNode;
+  getChallenge = () => this.state.questionData;
 
   getBlockNameTitle() {
     const {
@@ -181,6 +200,7 @@ class ShowClassic extends Component {
 
   getChallengeFile() {
     const { files } = this.props;
+    console.log('files ', files);
     return first(Object.keys(files).map(key => files[key]));
   }
 
@@ -218,6 +238,12 @@ class ShowClassic extends Component {
     const { files } = this.props;
 
     const challengeFile = first(Object.keys(files).map(key => files[key]));
+    // if (challengeFile && !this.state.setInitialCode) {
+    //   challengeFile.contents = '<h3>This is H3</h3>';
+    //   this.setState({
+    //     setInitialCode: true
+    //   });
+    // }
     return (
       challengeFile && (
         <Editor
@@ -250,6 +276,9 @@ class ShowClassic extends Component {
   }
 
   render() {
+    if (!this.state.questionData) {
+      return <div>Loading</div>;
+    }
     const { forumTopicId, title } = this.getChallenge();
     const {
       executeChallenge,
