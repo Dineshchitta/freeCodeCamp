@@ -7,16 +7,13 @@ import Helmet from 'react-helmet';
 import { graphql } from 'gatsby';
 import { first } from 'lodash';
 import Media from 'react-responsive';
+import { Modal } from '@freecodecamp/react-bootstrap';
 
 import LearnLayout from '../../../components/layouts/Learn';
 import Editor from './Editor';
 import Preview from '../components/Preview';
 import SidePanel from '../components/Side-Panel';
 import Output from '../components/Output';
-import CompletionModal from '../components/CompletionModal';
-import HelpModal from '../components/HelpModal';
-import VideoModal from '../components/VideoModal';
-import ResetModal from '../components/ResetModal';
 import MobileLayout from './MobileLayout';
 import DesktopLayout from './DesktopLayout';
 import Hotkeys from '../components/Hotkeys';
@@ -46,18 +43,21 @@ const mapStateToProps = createStructuredSelector({
   output: consoleOutputSelector
 });
 
-const mapDispatchToProps = dispatch =>
-  bindActionCreators(
-    {
-      createFiles,
-      initConsole,
-      initTests,
-      updateChallengeMeta,
-      challengeMounted,
-      executeChallenge
-    },
-    dispatch
-  );
+const mapDispatchToProps = dispatch => {
+  return {
+    ...bindActionCreators(
+      {
+        createFiles,
+        initConsole,
+        initTests,
+        updateChallengeMeta,
+        challengeMounted,
+        executeChallenge
+      },
+      dispatch
+    )
+  };
+};
 
 const propTypes = {
   challengeMounted: PropTypes.func.isRequired,
@@ -101,13 +101,46 @@ class ShowClassic extends Component {
     };
 
     this.state = {
+      showQuestion: false,
       resizing: false,
-      questionData: null,
+      questionData: {
+        title: 'Headline with the h2 Element',
+        description: 'This is Question description',
+        instructions: [
+          '1.Write a <code>div</code> element in the body.',
+          '2. In <code>div</code> element write an <code>img</code> element with src attribute value "https://drive.google.com/open?id=1FcfljeJtHeGpcRMjpa8RbPR2jnXIXMUU" and alt attribute value "HTML logo".', //eslint-disable-line
+          '3. Insert <code>h2</code> element and write "HTML" text as heading after <code>img</code> element.', //eslint-disable-line
+          '4. Insert <code>p</code> element and write "Hyper Text Markup Language (HTML) is a markup language for creating a webpage" text as paragraph.' //eslint-disable-line
+        ],
+        challengeType: 0,
+        videoUrl: '',
+        forumTopicId: 18196,
+        fields: {
+          slug: 'SSD',
+          blockName: 'Challenge',
+          tests: [
+            {
+              text: 'Should have <code>img</code> element..',
+              testString: 'assert(($("img").length > 0));'
+            },
+            {
+              text: 'Should have <code>h2</code> element..',
+              testString: 'assert(($("h2").length > 0));'
+            }
+          ]
+        }
+      },
       setInitialCode: false
     };
 
     this.containerRef = React.createRef();
   }
+
+  toggleShowQuestion = () => {
+    this.setState(prevState => ({
+      showQuestion: !prevState.showQuestion
+    }));
+  };
   onResize() {
     this.setState({ resizing: true });
   }
@@ -212,7 +245,7 @@ class ShowClassic extends Component {
     );
   }
 
-  renderInstructionsPanel({ showToolPanel }) {
+  renderInstructionsPanel() {
     const {
       fields: { blockName },
       description,
@@ -221,16 +254,30 @@ class ShowClassic extends Component {
 
     const { forumTopicId, title } = this.getChallenge();
     return (
-      <SidePanel
-        className='full-height'
-        description={description}
-        guideUrl={getGuideUrl({ forumTopicId, title })}
-        instructions={instructions}
-        section={dasherize(blockName)}
-        showToolPanel={showToolPanel}
-        title={this.getBlockNameTitle()}
-        videoUrl={this.getVideoUrl()}
-      />
+      <Modal
+        animation={false}
+        bsSize='lg'
+        dialogClassName='challenge-success-modal'
+        keyboard={true}
+        onHide={this.toggleShowQuestion}
+        onKeyDown={false}
+        show={this.state.showQuestion}
+      >
+        <Modal.Header
+          className='challenge-list-header fcc-modal'
+          closeButton={true}
+        />
+        <SidePanel
+          className='full-height'
+          description={description}
+          guideUrl={getGuideUrl({ forumTopicId, title })}
+          instructions={instructions}
+          section={dasherize(blockName)}
+          showToolPanel={false}
+          title={this.getBlockNameTitle()}
+          videoUrl={this.getVideoUrl()}
+        />
+      </Modal>
     );
   }
 
@@ -275,6 +322,13 @@ class ShowClassic extends Component {
     );
   }
 
+  getCode = () => {
+    const file = this.getChallengeFile();
+    window.ReactNativeWebView.postMessage(
+      JSON.stringify({ code: file.contents })
+    );
+  };
+
   render() {
     if (!this.state.questionData) {
       return <div>Loading</div>;
@@ -298,6 +352,15 @@ class ShowClassic extends Component {
           <Helmet
             title={`Learn ${this.getBlockNameTitle()} | freeCodeCamp.org`}
           />
+          <div id='header-container'>
+            <div id='show-question' onClick={this.toggleShowQuestion}>
+              Show Question
+            </div>
+            <div id='run-tests' onClick={executeChallenge}>
+              Run Tests
+            </div>
+          </div>
+          {this.renderInstructionsPanel()}
           <Media maxWidth={MAX_MOBILE_WIDTH}>
             <MobileLayout
               editor={this.renderEditor()}
@@ -324,10 +387,6 @@ class ShowClassic extends Component {
               testOutput={this.renderTestOutput()}
             />
           </Media>
-          <CompletionModal />
-          <HelpModal />
-          <VideoModal videoUrl={this.getVideoUrl()} />
-          <ResetModal />
         </LearnLayout>
       </Hotkeys>
     );

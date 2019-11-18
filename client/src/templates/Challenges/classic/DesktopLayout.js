@@ -21,7 +21,7 @@ class DesktopLayout extends Component {
   render() {
     const {
       resizeProps,
-      instructions,
+
       challengeFile,
       editor,
       testOutput,
@@ -30,9 +30,6 @@ class DesktopLayout extends Component {
     } = this.props;
     return (
       <ReflexContainer className='desktop-layout' orientation='vertical'>
-        <ReflexElement flex={1} {...resizeProps}>
-          {instructions}
-        </ReflexElement>
         <ReflexSplitter propagate={true} {...resizeProps} />
         <ReflexElement flex={1} {...resizeProps}>
           {challengeFile && (

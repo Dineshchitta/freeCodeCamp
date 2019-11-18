@@ -34,9 +34,28 @@
   height: 100%;
   overflow: hidden;
 }
+
 #challenge-page-tabs a {
   text-decoration: none;
 }
+
 #challenge-page-tabs a:hover {
   color: var(--secondary-background);
+}
+
+#header-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+#show-question {
+  padding-left: 30px;
+  padding-right: 30px;
+  background-color: blue;
+}
+
+#run-tests {
+  padding-left: 30px;
+  padding-right: 30px;
+  background-color: blue;
 }
