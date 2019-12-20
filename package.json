@@ -99,5 +99,9 @@
     "hooks": {
       "pre-commit": "lint-staged"
     }
+  },
+  "dependencies": {
+    "ace-builds": "1.4.7",
+    "react": "16.12.0"
   }
 }

@@ -11,8 +11,14 @@ import {
 } from '../redux';
 import { userSelector, isDonationModalOpenSelector } from '../../../redux';
 import { Loader } from '../../../components/helpers';
+import AceEditor from 'react-ace';
+import 'ace-builds/src-noconflict/mode-html';
+import 'ace-builds/src-noconflict/mode-css';
+import 'ace-builds/src-noconflict/mode-javascript';
+import 'ace-builds/src-noconflict/mode-jsx';
+import 'ace-builds/src-noconflict/theme-terminal';
 
-const MonacoEditor = React.lazy(() => import('react-monaco-editor'));
+import './styles.css';
 
 const propTypes = {
   canFocus: PropTypes.bool,
@@ -47,7 +53,7 @@ const modeMap = {
   css: 'css',
   html: 'html',
   js: 'javascript',
-  jsx: 'javascript'
+  jsx: 'jsx'
 };
 
 var monacoThemesDefined = false;
@@ -113,6 +119,7 @@ class Editor extends Component {
 
   editorDidMount = (editor, monaco) => {
     this._editor = editor;
+    console.log(editor);
     if (this.props.canFocus) {
       this._editor.focus();
     } else this.focusOnHotkeys();
@@ -157,17 +164,40 @@ class Editor extends Component {
   }
 
   render() {
-    const { contents, ext, theme, fileKey } = this.props;
-    const editorTheme = theme === 'night' ? 'vs-dark-custom' : 'vs-custom';
+    const {
+      contents,
+      ext,
+      theme,
+      fileKey,
+      executeChallenge,
+      setEditorFocusability
+    } = this.props;
+    const editorTheme = theme === 'night' ? 'terminal' : 'terminal';
     return (
       <Suspense fallback={<Loader timeout={600} />}>
-        <MonacoEditor
-          editorDidMount={this.editorDidMount}
-          editorWillMount={this.editorWillMount}
-          key={`${editorTheme}-${fileKey}`}
-          language={modeMap[ext]}
+        <AceEditor
+          commands={[
+            {
+              name: 'commandName',
+              bindKey: { win: 'Ctrl-enter', mac: 'Command-enter' },
+              exec: () => {
+                executeChallenge();
+              }
+            },
+            {
+              name: 'commandName',
+              bindKey: { win: 'esc', mac: 'esc' },
+              exec: () => {
+                this.focusOnHotkeys();
+                setEditorFocusability(false);
+              }
+            }
+          ]}
+          componentDidMount={this.editorDidMount}
+          mode={modeMap[ext]}
+          name={`${editorTheme}-${fileKey}`}
           onChange={this.onChange}
-          options={this.options}
+          setOptions={this.options}
           theme={editorTheme}
           value={contents}
         />
@@ -179,7 +209,4 @@ class Editor extends Component {
 Editor.displayName = 'Editor';
 Editor.propTypes = propTypes;
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Editor);
+export default connect(mapStateToProps, mapDispatchToProps)(Editor);
