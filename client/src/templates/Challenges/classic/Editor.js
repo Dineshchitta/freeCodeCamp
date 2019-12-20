@@ -16,7 +16,7 @@ import 'ace-builds/src-noconflict/mode-html';
 import 'ace-builds/src-noconflict/mode-css';
 import 'ace-builds/src-noconflict/mode-javascript';
 import 'ace-builds/src-noconflict/mode-jsx';
-import 'ace-builds/src-noconflict/theme-terminal';
+import 'ace-builds/src-noconflict/theme-monokai';
 
 import './styles.css';
 
@@ -118,7 +118,6 @@ class Editor extends Component {
   };
 
   editorDidMount = (editor, monaco) => {
-    this._editor = editor;
     console.log(editor);
     if (this.props.canFocus) {
       this._editor.focus();
@@ -157,11 +156,11 @@ class Editor extends Component {
     updateFile({ key: fileKey, editorValue });
   };
 
-  componentDidUpdate(prevProps) {
-    if (this.props.dimensions !== prevProps.dimensions && this._editor) {
-      this._editor.layout();
-    }
-  }
+  onLoadEditor = editor => {
+    this._editor = editor;
+    console.log(editor);
+    this._editor.textInput.focus();
+  };
 
   render() {
     const {
@@ -172,7 +171,7 @@ class Editor extends Component {
       executeChallenge,
       setEditorFocusability
     } = this.props;
-    const editorTheme = theme === 'night' ? 'terminal' : 'terminal';
+    const editorTheme = theme === 'night' ? 'monokai' : 'monokai';
     return (
       <Suspense fallback={<Loader timeout={600} />}>
         <AceEditor
@@ -197,6 +196,7 @@ class Editor extends Component {
           mode={modeMap[ext]}
           name={`${editorTheme}-${fileKey}`}
           onChange={this.onChange}
+          onLoad={this.onLoadEditor}
           setOptions={this.options}
           theme={editorTheme}
           value={contents}
